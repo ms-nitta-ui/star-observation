@@ -19,17 +19,20 @@ button,.button{border:0;border-radius:10px;padding:12px 14px;font-size:14px;font
 .primary{background:var(--blue);color:white}.secondary{background:#edf0f6;color:#26334c;border:1px solid #d8deea}.wide{width:100%}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.actions>*{flex:1}
 .status{padding:10px;background:#f0f3f9;border-radius:9px;font-size:12px;line-height:1.6;margin-top:10px}
 canvas{width:100%;height:auto;background:#081020;border-radius:9px;display:block}.range{margin:12px 0}.range label{display:flex;justify-content:space-between}.range input{width:100%}
-.report{background:white;border:1px solid #cbd3e1;padding:17px;color:#172033;border-radius:5px}.report h3{text-align:center;font-size:19px;margin:0 0 5px}.report .sub{text-align:center;color:#596273;font-size:10px;margin-bottom:12px}.report h4{font-size:13px;border-bottom:1px solid #aab3c3;padding-bottom:4px;margin:13px 0 6px}.report p{font-size:11px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere;margin:4px 0;min-height:14px}.report .small{font-size:9px;color:#596273}.report .reportphotos{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.report img{width:100%;height:auto;display:block}.reportphotos img{aspect-ratio:4/3;object-fit:cover}.report .composite{max-height:250px;object-fit:contain;background:#081020}
+.report{background:white;border:1px solid #cbd3e1;padding:12px;color:#172033;border-radius:5px}.report h3{text-align:center;font-size:18px;margin:0 0 3px}.report .sub{text-align:center;color:#596273;font-size:9px;margin-bottom:6px}.report h4{font-size:11px;border-bottom:1px solid #aab3c3;padding-bottom:3px;margin:7px 0 4px}.report p{font-size:9px;line-height:1.35;white-space:pre-wrap;overflow-wrap:anywhere;margin:3px 0;min-height:10px}.report .small{font-size:8px;color:#596273}.report .reportphotos{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}.report img{width:100%;height:auto;display:block}.reportphotos img{aspect-ratio:4/3;object-fit:cover;max-height:82px}.report .resultrow{display:grid;grid-template-columns:1.15fr 1fr;gap:10px;align-items:start}.report .resultleft,.report .resultright{min-width:0}.report .composite{width:100%;max-height:150px;object-fit:contain;background:#081020}.report .resulttext{font-size:9px;line-height:1.4;white-space:pre-wrap;overflow-wrap:anywhere;min-height:110px;padding:4px 0}
 footer{text-align:center;color:#758096;font-size:11px;padding:5px}
 @media(max-width:420px){.card{padding:13px}.photos{gap:5px}.photo{padding:5px}.photo input[type=datetime-local]{font-size:9px}.grid{gap:7px}}
 @media print{
- @page{size:A4 portrait;margin:10mm}
- body{background:white!important}
+ @page{size:A4 portrait;margin:8mm}
+ html,body{width:100%;height:100%;background:white!important}
  body *{visibility:hidden!important}
  #printArea,#printArea *{visibility:visible!important}
- #printArea{position:absolute!important;left:0!important;top:0!important;width:100%!important;border:0!important;padding:0!important;box-shadow:none!important}
- .report h3{font-size:18pt}.report h4{font-size:10pt}.report p{font-size:9pt}
- .report .composite{max-height:190px}
+ #printArea{position:absolute!important;left:0!important;top:0!important;width:100%!important;height:281mm!important;max-height:281mm!important;overflow:hidden!important;border:0!important;padding:0!important;box-shadow:none!important;border-radius:0!important}
+ .report h3{font-size:15pt}.report h4{font-size:9pt}.report p{font-size:8pt;line-height:1.25}
+ .report .reportphotos img{max-height:65px}
+ .report .composite{max-height:125px}
+ .report .resulttext{font-size:8pt;line-height:1.25;min-height:95px}
+ .report .small{font-size:7pt}
 }
 </style>
 </head>
@@ -73,10 +76,8 @@ footer{text-align:center;color:#758096;font-size:11px;padding:5px}
 
 <section class="card">
 <h2><span class="num">4</span>観察結果・考察</h2>
-<div class="field"><label for="observation">観察して気付いたこと</label><textarea id="observation" placeholder=""></textarea></div>
-<div class="field"><label for="features">星の動き方にはどのような特徴があったか</label><textarea id="features" placeholder="星の移動する向きや、星どうしの位置関係などを書こう。"></textarea></div>
-<div class="field"><label for="thinking">考察：なぜ星が動いて見えるのだろうか</label><textarea id="thinking" placeholder="観察結果を根拠に、自分の考えを書こう。"></textarea></div>
-<div class="field"><label for="conclusion">まとめ：今回の観察から分かったこと</label><textarea id="conclusion" placeholder="自分の言葉でまとめよう。"></textarea></div>
+<div class="field"><label for="features">星の動き方の特徴</label><textarea id="features" placeholder="星の移動する向きや、星どうしの位置関係などを書こう。"></textarea></div>
+<div class="field"><label for="reflection">気付いたこと・考察・振り返り</label><textarea id="reflection" placeholder="観察して気付いたことや、考えたこと、今回の観察を振り返って分かったことを書こう。"></textarea></div>
 </section>
 
 <section class="card">
@@ -88,11 +89,11 @@ footer{text-align:center;color:#758096;font-size:11px;padding:5px}
 <p id="rstudent"></p>
 <h4>１．観察した日時と場所</h4><p id="rplace"></p><p id="rtimes"></p><p id="rdirection"></p>
 <h4>２．撮影した写真</h4><div class="reportphotos" id="rphotos"></div>
-<h4>３．写真を重ね合わせた結果</h4><img id="rcomposite" class="composite" alt="合成写真">
-<h4>４．観察して気付いたこと</h4><p id="robs"></p>
-<h4>５．星の動き方の特徴</h4><p id="rfeatures"></p>
-<h4>６．考察</h4><p id="rthinking"></p>
-<h4>７．まとめ</h4><p id="rconclusion"></p>
+<div class="resultrow">
+<div class="resultleft"><h4>３．写真を重ね合わせた結果</h4><img id="rcomposite" class="composite" alt="合成写真"></div>
+<div class="resultright"><h4>星の動き方の特徴</h4><p id="rfeatures" class="resulttext"></p></div>
+</div>
+<h4>４．気付いたこと・考察・振り返り</h4><p id="rreflection"></p>
 <p class="small" style="text-align:right;margin-top:12px">星空観察レポートメーカー</p>
 </div>
 <div class="actions"><button class="primary" id="pdf">PDFとして保存・印刷</button><button class="secondary" id="saveDraft">入力内容を一時保存</button></div>
@@ -101,7 +102,7 @@ footer{text-align:center;color:#758096;font-size:11px;padding:5px}
 
 <section class="card">
 <h2><span class="num">6</span>先生にPDFを提出</h2>
-<p class="note">①「PDFとして保存・印刷」からPDFをスマホに保存します。②保存したPDFを選び、③「先生に提出」を押してください。Googleアカウントへのログインは不要です。</p>
+<p class="note">①「PDFとして保存・印刷」からPDFをスマホに保存します。②保存したPDFを選び、③「先生に提出」を押してください。学校のGoogleアカウントでログインして提出してください。</p>
 <div class="field">
 <label for="pdfFile">保存したPDFを選択</label>
 <input id="pdfFile" type="file" accept="application/pdf,.pdf">
@@ -129,7 +130,8 @@ function draw(){
 }
 // 写真は登録時に自動圧縮し、圧縮後の画像を以後の処理に使う。
 async function compressPhoto(file){
- const MAX_EDGE=1600, QUALITY=0.78;
+ // 星空の細部をできるだけ残しつつ、写真1枚を約900KB以下にする。
+ const MAX_EDGE=1400, TARGET_BYTES=900*1024;
  let source=null, sourceCanvas=null;
  try{
   if('createImageBitmap' in window){source=await createImageBitmap(file);}
@@ -139,11 +141,23 @@ async function compressPhoto(file){
    finally{URL.revokeObjectURL(originalUrl);}
   }
   const sw=source.width||source.naturalWidth, sh=source.height||source.naturalHeight;
-  const scale=Math.min(1,MAX_EDGE/Math.max(sw,sh));
-  const w=Math.max(1,Math.round(sw*scale)), h=Math.max(1,Math.round(sh*scale));
-  sourceCanvas=document.createElement('canvas');sourceCanvas.width=w;sourceCanvas.height=h;
-  sourceCanvas.getContext('2d').drawImage(source,0,0,w,h);
-  return await new Promise((resolve,reject)=>sourceCanvas.toBlob(b=>b?resolve(b):reject(new Error('圧縮に失敗しました。')),'image/jpeg',QUALITY));
+  let edge=Math.min(MAX_EDGE,Math.max(sw,sh)), bestBlob=null;
+  const qualities=[0.76,0.68,0.60,0.54];
+  for(let attempt=0;attempt<8;attempt++){
+   const scale=Math.min(1,edge/Math.max(sw,sh));
+   const w=Math.max(1,Math.round(sw*scale)), h=Math.max(1,Math.round(sh*scale));
+   if(sourceCanvas){sourceCanvas.width=1;sourceCanvas.height=1;}
+   sourceCanvas=document.createElement('canvas');sourceCanvas.width=w;sourceCanvas.height=h;
+   sourceCanvas.getContext('2d').drawImage(source,0,0,w,h);
+   for(const q of qualities){
+    const blob=await new Promise((resolve,reject)=>sourceCanvas.toBlob(b=>b?resolve(b):reject(new Error('圧縮に失敗しました。')),'image/jpeg',q));
+    bestBlob=blob;
+    if(blob.size<=TARGET_BYTES)return blob;
+   }
+   edge=Math.round(edge*0.86);
+   if(edge<900)break;
+  }
+  return bestBlob;
  }finally{
   if(source&&typeof source.close==='function')source.close();
   if(sourceCanvas){sourceCanvas.width=1;sourceCanvas.height=1;}
@@ -186,7 +200,7 @@ $('align').onclick=async()=>{
 };
 function compositeData(){
  const c=document.createElement('canvas');c.width=1000;c.height=650;const x=c.getContext('2d');x.fillStyle='#081020';x.fillRect(0,0,1000,650);
- imgs.forEach((im,i)=>{if(!im)return;x.globalAlpha=i===0?1:Number($('opacity'+i).value)/100;let t=transforms[i];if(t&&i>0){x.setTransform(t[0]*2.5,t[3]*2.5,t[1]*2.5,t[4]*2.5,t[2]*2.5,t[5]*2.5);x.drawImage(im,0,0,400,260);x.setTransform(1,0,0,1,0,0)}else{let r=fit(im,1000,650);x.drawImage(im,r.x,r.y,r.w,r.h)}});x.globalAlpha=1;return c.toDataURL('image/jpeg',.88)
+ imgs.forEach((im,i)=>{if(!im)return;x.globalAlpha=i===0?1:Number($('opacity'+i).value)/100;let t=transforms[i];if(t&&i>0){x.setTransform(t[0]*2.5,t[3]*2.5,t[1]*2.5,t[4]*2.5,t[2]*2.5,t[5]*2.5);x.drawImage(im,0,0,400,260);x.setTransform(1,0,0,1,0,0)}else{let r=fit(im,1000,650);x.drawImage(im,r.x,r.y,r.w,r.h)}});x.globalAlpha=1;return c.toDataURL('image/jpeg',.68)
 }
 function makeReport(){
  if(imgs.some(x=>!x)){status('レポート作成前に写真を３枚登録してください。');return false}
@@ -198,12 +212,12 @@ function makeReport(){
  $('rphotos').replaceChildren();
  imgs.forEach((im,i)=>{let wrap=document.createElement('div'),pic=document.createElement('img'),cap=document.createElement('div');pic.src=urls[i];cap.className='small';cap.style.textAlign='center';cap.textContent='写真'+(i+1);wrap.append(pic,cap);$('rphotos').append(wrap)});
  $('rcomposite').src=compositeData();
- $('robs').textContent=v('observation');$('rfeatures').textContent=v('features');$('rthinking').textContent=v('thinking');$('rconclusion').textContent=v('conclusion');return true
+ $('rreflection').textContent=v('reflection');$('rfeatures').textContent=v('features');return true
 }
 $('makeReport').onclick=()=>{if(makeReport())$('printArea').scrollIntoView({behavior:'smooth',block:'start'})};
 $('pdf').onclick=()=>{if(makeReport())setTimeout(()=>window.print(),250)};
 $('saveDraft').onclick=()=>{
- const data={};['place','date','direction','grade','className','number','student','time0','time1','time2','observation','features','thinking','conclusion'].forEach(id=>data[id]=$(id).value);
+ const data={};['place','date','direction','grade','className','number','student','time0','time1','time2','features','reflection'].forEach(id=>data[id]=$(id).value);
  try{localStorage.setItem('starReportFields',JSON.stringify(data));status('入力内容をこのブラウザに一時保存しました（写真は保存されません）。')}catch(e){status('保存できませんでした。')}
 };
 $('uploadPdf').onclick=async()=>{
