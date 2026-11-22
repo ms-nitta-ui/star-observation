@@ -113,7 +113,7 @@ footer{text-align:center;color:#758096;font-size:11px;padding:5px}
 </main>
 <script>
 // 先生へ：デプロイしたGoogle Apps Scriptウェブアプリの /exec URLを設定してください。
-const GAS_WEB_APP_URL = "https://script.google.com/a/macros/kanazawa-city.ed.jp/s/AKfycbwd_X3uLaKBXYfu5T1-lRXcHhum5F4TC8oVPM0AlAexp8vGtL2V9iy4rFdow7Tb7IIi/exec";
+const GAS_WEB_APP_URL = "https://script.google.com/a/macros/kanazawa-city.ed.jp/s/AKfycbw__A7psF2oqUsNm6X9bSVpPttWU_MpzY6ubjyKObfEhskf54sdPFf37aOGShPVRbn-/exec";
 (()=>{
 const $=id=>document.getElementById(id);let imgs=[null,null,null],urls=[null,null,null],transforms=[null,null,null],displayMode='all';
 const canvas=$('compare'),ctx=canvas.getContext('2d');
@@ -127,10 +127,39 @@ function draw(){
  else{let r=fit(im,1000,650);ctx.drawImage(im,r.x,r.y,r.w,r.h)}
  });ctx.globalAlpha=1;
 }
-[0,1,2].forEach(i=>$('file'+i).addEventListener('change',e=>{
- const f=e.target.files[0];if(!f)return;if(!f.type.startsWith('image/')){status('画像ファイルを選んでください。');return}
- if(urls[i])URL.revokeObjectURL(urls[i]);const u=URL.createObjectURL(f),im=new Image();
- im.onload=()=>{imgs[i]=im;urls[i]=u;transforms[i]=null;$('thumb'+i).src=u;draw();status((i+1)+'枚目の写真を登録しました。')};im.onerror=()=>status('画像を読み込めませんでした。');im.src=u;
+// 写真は登録時に自動圧縮し、圧縮後の画像を以後の処理に使う。
+async function compressPhoto(file){
+ const MAX_EDGE=2000, QUALITY=0.90;
+ let source=null, sourceCanvas=null;
+ try{
+  if('createImageBitmap' in window){source=await createImageBitmap(file);}
+  else{
+   const originalUrl=URL.createObjectURL(file);
+   try{source=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('画像を読み込めませんでした。'));im.src=originalUrl;});}
+   finally{URL.revokeObjectURL(originalUrl);}
+  }
+  const sw=source.width||source.naturalWidth, sh=source.height||source.naturalHeight;
+  const scale=Math.min(1,MAX_EDGE/Math.max(sw,sh));
+  const w=Math.max(1,Math.round(sw*scale)), h=Math.max(1,Math.round(sh*scale));
+  sourceCanvas=document.createElement('canvas');sourceCanvas.width=w;sourceCanvas.height=h;
+  sourceCanvas.getContext('2d').drawImage(source,0,0,w,h);
+  return await new Promise((resolve,reject)=>sourceCanvas.toBlob(b=>b?resolve(b):reject(new Error('圧縮に失敗しました。')),'image/jpeg',QUALITY));
+ }finally{
+  if(source&&typeof source.close==='function')source.close();
+  if(sourceCanvas){sourceCanvas.width=1;sourceCanvas.height=1;}
+ }
+}
+[0,1,2].forEach(i=>$('file'+i).addEventListener('change',async e=>{
+ const f=e.target.files[0];if(!f)return;
+ if(!f.type.startsWith('image/')){status('画像ファイルを選んでください。');return;}
+ status((i+1)+'枚目の写真を圧縮しています。しばらくお待ちください。');
+ try{
+  const blob=await compressPhoto(f), u=URL.createObjectURL(blob), im=new Image();
+  await new Promise((resolve,reject)=>{im.onload=resolve;im.onerror=()=>reject(new Error('表示できませんでした。'));im.src=u;});
+  if(urls[i])URL.revokeObjectURL(urls[i]);
+  imgs[i]=im;urls[i]=u;transforms[i]=null;$('thumb'+i).src=u;draw();
+  status((i+1)+'枚目を自動圧縮しました（'+(f.size/1024/1024).toFixed(1)+'MB → '+(blob.size/1024/1024).toFixed(1)+'MB）。');
+ }catch(err){status('写真を圧縮できませんでした。JPEG形式などの写真を選び直してください。');e.target.value='';}
 }));
 ['opacity1','opacity2'].forEach(id=>$(id).addEventListener('input',()=>{$(id==='opacity1'?'op1':'op2').textContent=$(id).value+'%';draw()}));
 $('onlyFirst').onclick=()=>{displayMode='first';draw()};$('allPhotos').onclick=()=>{displayMode='all';draw()};
