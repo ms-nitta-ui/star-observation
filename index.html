@@ -129,7 +129,7 @@ function draw(){
 }
 // 写真は登録時に自動圧縮し、圧縮後の画像を以後の処理に使う。
 async function compressPhoto(file){
- const MAX_EDGE=2000, QUALITY=0.90;
+ const MAX_EDGE=1600, QUALITY=0.78;
  let source=null, sourceCanvas=null;
  try{
   if('createImageBitmap' in window){source=await createImageBitmap(file);}
