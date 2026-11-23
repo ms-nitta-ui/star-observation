@@ -11,7 +11,7 @@
 header{background:linear-gradient(135deg,#101b35,#293f70);color:white;padding:22px 16px 25px}
 header .inner,main{max-width:760px;margin:auto}header .eyebrow{font-size:11px;letter-spacing:.16em;opacity:.8}h1{font-size:23px;margin:7px 0 4px}header p{font-size:13px;margin:0;opacity:.85}
 main{padding:15px 12px 45px}.card{background:white;border:1px solid var(--line);border-radius:15px;padding:16px;margin:0 0 13px;box-shadow:0 2px 8px #1b2c4b08}
-h2{font-size:16px;margin:0 0 12px;display:flex;align-items:center;gap:9px}.num{background:#e8edfb;color:#263f7d;width:26px;height:26px;border-radius:50%;display:inline-grid;place-items:center;font-size:13px}
+h2{font-size:16px;margin:0 0 12px;display:flex;align-items:center;gap:9px}.photo-advice{background:#f8faff;border-color:#cbd6ee}.photo-advice h2{margin-bottom:7px}.photo-advice ul{margin:0;padding-left:1.35em;font-size:13px;line-height:1.7}.num{background:#e8edfb;color:#263f7d;width:26px;height:26px;border-radius:50%;display:inline-grid;place-items:center;font-size:13px}
 .note{font-size:12px;color:var(--muted);line-height:1.65}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.field{margin:0 0 11px}label{font-size:12px;font-weight:700;display:block;margin:0 0 5px}
 input[type=text],input[type=date],input[type=datetime-local],textarea,select{width:100%;border:1px solid #cbd3e1;border-radius:9px;padding:10px;font:inherit;font-size:14px;background:white;color:var(--ink)}
 textarea{min-height:78px;resize:vertical}.photos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.photo{min-width:0;background:#f3f5f9;border-radius:10px;padding:8px}.photo b{font-size:12px;display:block;margin-bottom:6px}.photo img{width:100%;aspect-ratio:4/3;object-fit:cover;background:#101b35;border-radius:6px;display:block}.photo input{width:100%;font-size:10px;margin-top:7px}.photo input[type=datetime-local]{font-size:10px;padding:6px}
@@ -43,6 +43,14 @@ footer{text-align:center;color:#758096;font-size:11px;padding:5px}
 <body>
 <header><div class="inner"><div class="eyebrow">ASTRONOMY FIELD REPORT</div><h1>🌌 星空観察レポートメーカー</h1><p>３枚の写真を比べて、星の動きを発見しよう。</p></div></header>
 <main>
+<section class="card photo-advice" aria-label="星空を撮影するときのアドバイス">
+<h2>📷 星空を撮影するときのポイント</h2>
+<ul>
+<li>星空・夜景専用の撮影アプリを使おう。</li>
+<li>ISO感度・シャッタースピード・露出を調整しよう。</li>
+<li>三脚などでスマートフォンを固定し、撮影中は動かさない。</li>
+</ul>
+</section>
 <section class="card">
 <h2><span class="num">1</span>観察場所と方位</h2>
 <div class="field"><label for="place">観察場所</label><input id="place" type="text" placeholder="例：学校のグラウンド"></div>
@@ -60,9 +68,9 @@ footer{text-align:center;color:#758096;font-size:11px;padding:5px}
 <section class="card">
 <h2><span class="num">2</span>写真を３枚登録</h2>
 <div class="photos">
-<div class="photo"><b>① １枚目</b><img id="thumb0" alt="１枚目のプレビュー"><input id="file0" type="file" accept="image/*" capture="environment"><label for="time0" style="margin-top:8px">撮影時刻</label><input id="time0" type="datetime-local"></div>
-<div class="photo"><b>② ２枚目</b><img id="thumb1" alt="２枚目のプレビュー"><input id="file1" type="file" accept="image/*" capture="environment"><label for="time1" style="margin-top:8px">撮影時刻</label><input id="time1" type="datetime-local"></div>
-<div class="photo"><b>③ ３枚目</b><img id="thumb2" alt="３枚目のプレビュー"><input id="file2" type="file" accept="image/*" capture="environment"><label for="time2" style="margin-top:8px">撮影時刻</label><input id="time2" type="datetime-local"></div>
+<div class="photo"><b>① １枚目</b><img id="thumb0" alt="１枚目のプレビュー"><input id="file0" type="file" accept="image/*"><label for="time0" style="margin-top:8px">撮影時刻</label><input id="time0" type="datetime-local"></div>
+<div class="photo"><b>② ２枚目</b><img id="thumb1" alt="２枚目のプレビュー"><input id="file1" type="file" accept="image/*"><label for="time1" style="margin-top:8px">撮影時刻</label><input id="time1" type="datetime-local"></div>
+<div class="photo"><b>③ ３枚目</b><img id="thumb2" alt="３枚目のプレビュー"><input id="file2" type="file" accept="image/*"><label for="time2" style="margin-top:8px">撮影時刻</label><input id="time2" type="datetime-local"></div>
 </div>
 <div class="actions"><button class="primary" id="align">写真を自動位置合わせ</button><button class="secondary" id="reset">写真を消去</button></div>
 <div class="status" id="alignStatus" role="status">写真を３枚登録してください。自動位置合わせでは、星ではなく地上の景色を基準にします。</div>
@@ -99,7 +107,7 @@ footer{text-align:center;color:#758096;font-size:11px;padding:5px}
 <p class="small" style="text-align:right;margin-top:12px">星空観察レポートメーカー</p>
 </div>
 <div class="actions"><button class="primary" id="pdf">圧縮PDFを作成・保存</button><button class="secondary" id="saveDraft">入力内容を一時保存</button></div>
-<div class="status" id="pdfStatus">PDFは画像を圧縮してA4・1ページで作成します。作成したPDFを端末に保存してください。</div>
+<div class="status" id="pdfStatus">入力内容全体を縮小調整し、A4・1ページのPDFとして保存します。文章が長い場合は、全体が小さくなることがあります。</div>
 </section>
 
 <section class="card">
@@ -227,18 +235,22 @@ $('pdf').onclick=async()=>{
   if(!window.html2canvas||!window.jspdf||!window.jspdf.jsPDF)throw new Error('PDF作成ライブラリを読み込めませんでした。インターネット接続を確認してください。');
   await Promise.all(Array.from(target.querySelectorAll('img')).map(im=>im.decode?im.decode().catch(()=>{}):Promise.resolve()));
   if(document.fonts&&document.fonts.ready)await document.fonts.ready;
-  // A4縦の比率に固定して描画。画像はJPEG化してからPDFへ入れる。
-  target.style.width='794px';target.style.height='1123px';target.style.minHeight='1123px';
-  target.style.maxHeight='1123px';target.style.overflow='hidden';target.style.padding='20px';
+  // 内容全体を自然な高さで描画し、縦横比を保ったままA4・1ページに収める。
+  target.style.width='794px';target.style.height='auto';target.style.minHeight='0';
+  target.style.maxHeight='none';target.style.overflow='visible';target.style.padding='20px';
   target.style.border='0';target.style.borderRadius='0';
+  const contentHeight=Math.ceil(target.scrollHeight);
   const shot=await window.html2canvas(target,{scale:2,backgroundColor:'#ffffff',useCORS:true,
-   logging:false,width:794,height:1123,windowWidth:794,windowHeight:1123});
+   logging:false,width:794,height:contentHeight,windowWidth:794,windowHeight:Math.max(contentHeight,1123)});
   const jpg=shot.toDataURL('image/jpeg',0.68);
   const PDF=window.jspdf.jsPDF;
   const pdf=new PDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
-  pdf.addImage(jpg,'JPEG',0,0,210,297,undefined,'FAST');
+  const pageW=210,pageH=297,margin=5;
+  const fitScale=Math.min((pageW-margin*2)/shot.width,(pageH-margin*2)/shot.height);
+  const imageW=shot.width*fitScale,imageH=shot.height*fitScale;
+  pdf.addImage(jpg,'JPEG',(pageW-imageW)/2,(pageH-imageH)/2,imageW,imageH,undefined,'FAST');
   pdf.save('星空観察レポート.pdf');
-  info.textContent='圧縮PDFを作成しました。写真を含めたA4・1ページのPDFを保存してください。';
+  info.textContent='圧縮PDFを作成しました。写真と入力内容を含むA4・1ページのPDFを保存してください。';
  }catch(err){
   info.textContent='PDFを作成できませんでした。'+(err&&err.message?err.message:'')+' ページを再読み込みして、もう一度お試しください。';
  }finally{
