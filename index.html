@@ -72,7 +72,7 @@ footer{text-align:center;color:#758096;font-size:11px;padding:5px}
 <div class="photo"><b>③ ３枚目</b><img id="thumb2" alt="３枚目のプレビュー"><input id="file2" type="file" accept="image/*"><label for="time2" style="margin-top:8px">撮影時刻</label><input id="time2" type="datetime-local"></div>
 </div>
 <div class="actions"><button class="secondary" id="reset">写真をすべて消去</button></div>
-<div class="status" id="photoStatus" role="status">写真を３枚登録してください。建物・木・山の稜線など、地上の景色が少し写っていると星の位置の変化が分かりやすくなります。</div>
+<div class="status" id="photoStatus" role="status">写真を３枚登録してください。登録した写真はブラウザに自動保存され、「写真をすべて消去」を押すまで保持されます。</div>
 </section>
 
 <section class="card">
@@ -82,14 +82,13 @@ footer{text-align:center;color:#758096;font-size:11px;padding:5px}
 </section>
 
 <section class="card">
-<h2><span class="num">4</span>レポート作成・PDF保存・提出</h2>
-<button class="primary wide" id="pdfAndSubmit">PDFを保存して先生に提出する</button>
+<h2><span class="num">4</span>レポートを作成・PDF保存</h2>
 <div class="actions">
-  <button class="secondary" id="pdfOnly">PDFだけ保存する</button>
+  <button class="primary" id="pdf">PDFを作成・保存</button>
   <button class="secondary" id="makeReport">プレビュー更新</button>
   <button class="secondary" id="saveDraft">一時保存</button>
 </div>
-<div class="status" id="pdfStatus" role="status">上のボタンを押すと、端末にPDFが保存されると同時に、学校のGoogleドライブへ自動で提出されます。提出ボタンを押すまで写真や入力内容は送信されません。</div>
+<div class="status" id="pdfStatus" role="status">入力が終わったら「PDFを作成・保存」を押すと、A4・1ページのPDFファイルが自動で保存されます。</div>
 <div style="height:12px"></div>
 <div id="printArea" class="report">
 <h3>星の動きを観察しよう</h3><div class="sub">天体の観察レポート</div>
@@ -101,14 +100,108 @@ footer{text-align:center;color:#758096;font-size:11px;padding:5px}
 <p class="small" style="text-align:right;margin-top:12px">星空観察レポートメーカー</p>
 </div>
 </section>
-<footer>星空観察レポートメーカー ｜ 提出時に、作成したPDFと入力した提出者情報を学校のGoogleドライブへ送信します。</footer>
+
+<section class="card">
+<h2><span class="num">5</span>先生にPDFを提出</h2>
+<p class="note">①「PDFを作成・保存」からPDFをスマホに保存します。②保存したPDFを選び、③「先生に提出する」を押してください。</p>
+<div class="field">
+<label for="pdfFile">保存したPDFを選択</label>
+<input id="pdfFile" type="file" accept="application/pdf,.pdf">
+</div>
+<button class="primary wide" id="uploadPdf">先生に提出する</button>
+<div class="status" id="uploadStatus" role="status">PDFは学校のGoogleドライブに保存されます。写真や入力内容は、提出ボタンを押すまで送信されません。</div>
+</section>
+<footer>星空観察レポートメーカー ｜ PDF提出時に、選択したファイルと入力した提出者情報を学校のGoogleドライブへ送信します。</footer>
 </main>
 <script>
 // 先生へ：デプロイしたGoogle Apps Scriptウェブアプリの /exec URLを設定してください。
 const GAS_WEB_APP_URL = "https://script.google.com/a/macros/kanazawa-city.ed.jp/s/AKfycbw__A7psF2oqUsNm6X9bSVpPttWU_MpzY6ubjyKObfEhskf54sdPFf37aOGShPVRbn-/exec";
 (()=>{
-const $=id=>document.getElementById(id);let imgs=[null,null,null],urls=[null,null,null];
+const $=id=>document.getElementById(id);
+let imgs=[null,null,null],urls=[null,null,null];
+const FIELD_IDS=['place','date','direction','grade','className','number','student','time0','time1','time2','features','reflection'];
+
 function status(s){$('photoStatus').textContent=s}
+
+// IndexedDBを使って写真Blobを永続保存する（画面遷移や戻る操作でも消えないようにする）
+const DB_NAME='starReportDB', STORE_NAME='photos';
+function openPhotoDB(){
+ return new Promise((resolve,reject)=>{
+  if(!('indexedDB' in window))return reject(new Error('IndexedDB非対応'));
+  const req=indexedDB.open(DB_NAME,1);
+  req.onupgradeneeded=e=>{
+   const db=e.target.result;
+   if(!db.objectStoreNames.contains(STORE_NAME))db.createObjectStore(STORE_NAME);
+  };
+  req.onsuccess=()=>resolve(req.result);
+  req.onerror=()=>reject(req.error);
+ });
+}
+async function savePhotoToDB(index,blob){
+ try{
+  const db=await openPhotoDB();
+  await new Promise((resolve,reject)=>{
+   const tx=db.transaction(STORE_NAME,'readwrite');
+   tx.objectStore(STORE_NAME).put(blob,'photo_'+index);
+   tx.oncomplete=resolve;
+   tx.onerror=()=>reject(tx.error);
+  });
+  db.close();
+ }catch(e){}
+}
+async function loadPhotoFromDB(index){
+ try{
+  const db=await openPhotoDB();
+  const blob=await new Promise((resolve,reject)=>{
+   const tx=db.transaction(STORE_NAME,'readonly');
+   const req=tx.objectStore(STORE_NAME).get('photo_'+index);
+   req.onsuccess=()=>resolve(req.result||null);
+   req.onerror=()=>reject(req.error);
+  });
+  db.close();
+  return blob;
+ }catch(e){return null;}
+}
+async function clearPhotosFromDB(){
+ try{
+  const db=await openPhotoDB();
+  await new Promise((resolve,reject)=>{
+   const tx=db.transaction(STORE_NAME,'readwrite');
+   tx.objectStore(STORE_NAME).clear();
+   tx.oncomplete=resolve;
+   tx.onerror=()=>reject(tx.error);
+  });
+  db.close();
+ }catch(e){}
+}
+
+// 入力フィールドを自動保存する
+function saveFieldsToStorage(){
+ const data={};
+ FIELD_IDS.forEach(id=>{if($(id))data[id]=$(id).value});
+ try{localStorage.setItem('starReportFields',JSON.stringify(data));}catch(e){}
+}
+FIELD_IDS.forEach(id=>{
+ const el=$(id);
+ if(el){
+  el.addEventListener('input',saveFieldsToStorage);
+  el.addEventListener('change',saveFieldsToStorage);
+ }
+});
+
+// Blobを画面に表示してメモリ上にセットする
+async function applyPhotoBlob(i,blob){
+ const u=URL.createObjectURL(blob), im=new Image();
+ await new Promise((resolve,reject)=>{
+  im.onload=resolve;
+  im.onerror=()=>reject(new Error('表示できませんでした。'));
+  im.src=u;
+ });
+ if(urls[i])URL.revokeObjectURL(urls[i]);
+ imgs[i]=im;
+ urls[i]=u;
+ $('thumb'+i).src=u;
+}
 
 // 写真は登録時に自動圧縮し、圧縮後の画像を以後の処理に使う。
 async function compressPhoto(file){
@@ -150,21 +243,25 @@ async function compressPhoto(file){
  if(!f.type.startsWith('image/')){status('画像ファイルを選んでください。');return;}
  status((i+1)+'枚目の写真を読み込んでいます…');
  try{
-  const blob=await compressPhoto(f), u=URL.createObjectURL(blob), im=new Image();
-  await new Promise((resolve,reject)=>{im.onload=resolve;im.onerror=()=>reject(new Error('表示できませんでした。'));im.src=u;});
-  if(urls[i])URL.revokeObjectURL(urls[i]);
-  imgs[i]=im;urls[i]=u;$('thumb'+i).src=u;
-  status((i+1)+'枚目を登録しました（'+(f.size/1024/1024).toFixed(1)+'MB → '+(blob.size/1024/1024).toFixed(1)+'MB）。');
+  const blob=await compressPhoto(f);
+  await applyPhotoBlob(i,blob);
+  await savePhotoToDB(i,blob);
+  status((i+1)+'枚目を登録・保存しました（'+(f.size/1024/1024).toFixed(1)+'MB → '+(blob.size/1024/1024).toFixed(1)+'MB）。');
   if(!imgs.some(x=>!x))makeReport(true);
- }catch(err){status('写真を読み込めませんでした。JPEG形式などの写真を選び直してください。');e.target.value='';}
+ }catch(err){
+  status('写真を読み込めませんでした。JPEG形式などの写真を選び直してください。');
+  e.target.value='';
+ }
 }));
 
-$('reset').onclick=()=>{
+$('reset').onclick=async()=>{
+ if(!confirm('登録した３枚の写真をすべて消去しますか？'))return;
  imgs=[null,null,null];
  urls.forEach(u=>u&&URL.revokeObjectURL(u));
  urls=[null,null,null];
  [0,1,2].forEach(i=>{$('file'+i).value='';$('thumb'+i).removeAttribute('src')});
- status('写真を消去しました。');
+ await clearPhotosFromDB();
+ status('保存されていた写真をすべて消去しました。');
 };
 
 function makeReport(silent=false){
@@ -236,9 +333,11 @@ function buildPdfFilename(){
  return parts.length?'星空観察レポート_'+parts.join('_')+'.pdf':'星空観察レポート.pdf';
 }
 
-// PDFを生成して端末へ保存し、jsPDFインスタンスとファイル名を返す
-async function createAndSavePdf(){
- const target=$('printArea');
+$('pdf').onclick=async()=>{
+ if(!makeReport())return;
+ const btn=$('pdf'),info=$('pdfStatus'),target=$('printArea');
+ btn.disabled=true;btn.textContent='PDFを作成中…';
+ info.textContent='PDFを作成しています。そのまま少しお待ちください…';
  const original={width:target.style.width,height:target.style.height,minHeight:target.style.minHeight,
   maxHeight:target.style.maxHeight,overflow:target.style.overflow,padding:target.style.padding,
   border:target.style.border,borderRadius:target.style.borderRadius};
@@ -261,89 +360,104 @@ async function createAndSavePdf(){
   pdf.addImage(jpg,'JPEG',(pageW-imageW)/2,(pageH-imageH)/2,imageW,imageH,undefined,'FAST');
   const filename=buildPdfFilename();
   pdf.save(filename);
-  return {pdf,filename};
+  info.textContent='「'+filename+'」を保存しました！下の「5 先生にPDFを提出」から保存したファイルを選んで提出してください。';
+ }catch(err){
+  info.textContent='PDFを作成できませんでした。'+(err&&err.message?err.message:'')+' ページを再読み込みして、もう一度お試しください。';
  }finally{
   Object.assign(target.style,original);
- }
-}
-
-// 生成したPDFをそのままGoogle Apps Scriptへ送信する
-function submitPdfToDrive(pdf,filename){
- if(!GAS_WEB_APP_URL.startsWith('https://script.google.com/')){
-  throw new Error('先生側でGoogle Apps ScriptのウェブアプリURLを設定する必要があります。');
- }
- const dataUri=pdf.output('datauristring');
- const base64=String(dataUri).split(',')[1];
- const student=($('student').value||'名前未入力').trim();
- const className=(($('grade').value||'学年未入力')+($('className').value||'組未入力')+($('number').value||'番号未入力')).trim();
- const date=($('date').value||'日付未入力').trim();
-
- const form=document.createElement('form');
- form.method='POST';form.action=GAS_WEB_APP_URL;form.target='starUploadFrame';
- form.style.display='none';
- const fields={
-  filename:filename,
-  mimeType:'application/pdf',
-  base64:base64,
-  student:student,
-  className:className,
-  observationDate:date
- };
- Object.entries(fields).forEach(([name,value])=>{
-  const input=document.createElement('input');input.type='hidden';input.name=name;input.value=value;form.appendChild(input);
- });
- let frame=document.getElementById('starUploadFrame');
- if(!frame){frame=document.createElement('iframe');frame.name='starUploadFrame';frame.id='starUploadFrame';frame.style.display='none';document.body.appendChild(frame);}
- document.body.appendChild(form);
- form.submit();
- setTimeout(()=>form.remove(),4000);
-}
-
-$('pdfAndSubmit').onclick=async()=>{
- if(!makeReport())return;
- const mainBtn=$('pdfAndSubmit'),subBtn=$('pdfOnly'),info=$('pdfStatus');
- mainBtn.disabled=true;subBtn.disabled=true;
- mainBtn.textContent='PDF作成・提出中…';
- info.textContent='PDFを作成して端末に保存し、学校のGoogleドライブへ送信しています。完了まで画面を閉じないでください…';
- try{
-  const {pdf,filename}=await createAndSavePdf();
-  info.textContent='「'+filename+'」を端末に保存しました。続けて先生へ提出しています…';
-  submitPdfToDrive(pdf,filename);
-  setTimeout(()=>{
-   info.textContent='「'+filename+'」の端末への保存と、先生への提出リクエストが完了しました！';
-   mainBtn.disabled=false;subBtn.disabled=false;
-   mainBtn.textContent='PDFを保存して先生に提出する';
-  },3500);
- }catch(err){
-  info.textContent='エラーが発生しました：'+(err&&err.message?err.message:'処理に失敗しました。')+' 通信環境を確認してもう一度お試しください。';
-  mainBtn.disabled=false;subBtn.disabled=false;
-  mainBtn.textContent='PDFを保存して先生に提出する';
- }
-};
-
-$('pdfOnly').onclick=async()=>{
- if(!makeReport())return;
- const mainBtn=$('pdfAndSubmit'),subBtn=$('pdfOnly'),info=$('pdfStatus');
- mainBtn.disabled=true;subBtn.disabled=true;
- subBtn.textContent='PDF作成中…';
- info.textContent='PDFを作成しています…';
- try{
-  const {filename}=await createAndSavePdf();
-  info.textContent='「'+filename+'」を端末に保存しました（Googleドライブへの提出は行われていません）。';
- }catch(err){
-  info.textContent='PDFを作成できませんでした：'+(err&&err.message?err.message:'');
- }finally{
-  mainBtn.disabled=false;subBtn.disabled=false;
-  subBtn.textContent='PDFだけ保存する';
+  btn.disabled=false;btn.textContent='PDFを作成・保存';
  }
 };
 
 $('saveDraft').onclick=()=>{
- const data={};['place','date','direction','grade','className','number','student','time0','time1','time2','features','reflection'].forEach(id=>data[id]=$(id).value);
- try{localStorage.setItem('starReportFields',JSON.stringify(data));$('pdfStatus').textContent='入力内容をこのブラウザに一時保存しました（写真は保存されません）。'}catch(e){$('pdfStatus').textContent='一時保存できませんでした。'}
+ saveFieldsToStorage();
+ $('pdfStatus').textContent='入力内容と写真をブラウザに保存しました（「写真をすべて消去」を押すまで保持されます）。';
 };
 
-try{const d=JSON.parse(localStorage.getItem('starReportFields')||'{}');Object.keys(d).forEach(id=>{if($(id))$(id).value=d[id]})}catch(e){}
+$('uploadPdf').onclick=async()=>{
+ const file=$('pdfFile').files[0];
+ const statusBox=$('uploadStatus');
+ if(!GAS_WEB_APP_URL.startsWith('https://script.google.com/')){
+   statusBox.textContent='先生側でGoogle Apps ScriptのウェブアプリURLを設定する必要があります。';
+   return;
+ }
+ if(!file){statusBox.textContent='先にスマホに保存したPDFを選択してください。';return;}
+ if(file.type!=='application/pdf' && !file.name.toLowerCase().endsWith('.pdf')){
+   statusBox.textContent='PDFファイルを選択してください。';return;
+ }
+ if(file.size>20*1024*1024){
+   statusBox.textContent='ファイルサイズが大きすぎます。20MB以下のPDFを選択してください。';return;
+ }
+ const student=($('student').value||'名前未入力').trim();
+ const className=(($('grade').value||'学年未入力')+($('className').value||'組未入力')+($('number').value||'番号未入力')).trim();
+ const date=($('date').value||'日付未入力').trim();
+ $('uploadPdf').disabled=true;
+ $('uploadPdf').textContent='送信準備中…';
+ statusBox.textContent='PDFを読み込んでいます。画面を閉じずにお待ちください。';
+ try{
+   const dataUrl=await new Promise((resolve,reject)=>{
+     const reader=new FileReader();
+     reader.onload=()=>resolve(reader.result);
+     reader.onerror=()=>reject(new Error('PDFを読み込めませんでした。'));
+     reader.readAsDataURL(file);
+   });
+   const base64=String(dataUrl).split(',')[1];
+   const form=document.createElement('form');
+   form.method='POST';form.action=GAS_WEB_APP_URL;form.target='starUploadFrame';
+   form.style.display='none';
+   const fields={
+     filename:file.name,
+     mimeType:'application/pdf',
+     base64:base64,
+     student:student,
+     className:className,
+     observationDate:date
+   };
+   Object.entries(fields).forEach(([name,value])=>{
+     const input=document.createElement('input');input.type='hidden';input.name=name;input.value=value;form.appendChild(input);
+   });
+   let frame=document.getElementById('starUploadFrame');
+   if(!frame){frame=document.createElement('iframe');frame.name='starUploadFrame';frame.id='starUploadFrame';frame.style.display='none';document.body.appendChild(frame);}
+   document.body.appendChild(form);
+   statusBox.textContent='送信しています。完了まで画面を閉じないでください。';
+   form.submit();
+   setTimeout(()=>{
+     statusBox.textContent='送信リクエストを送信しました。学校のGoogleドライブにPDFが保存されているか、先生側で確認してください。通信状況などにより保存に失敗する場合もあります。';
+     $('uploadPdf').disabled=false;$('uploadPdf').textContent='先生に提出する';
+     form.remove();
+   },3500);
+ }catch(err){
+   statusBox.textContent='送信できませんでした：'+err.message;
+   $('uploadPdf').disabled=false;$('uploadPdf').textContent='先生に提出する';
+ }
+};
+
+// 起動時・ページ復元時（bfcache含む）に保存済みのテキストと写真を復元する
+async function restoreAll(){
+ try{
+  const d=JSON.parse(localStorage.getItem('starReportFields')||'{}');
+  Object.keys(d).forEach(id=>{if($(id))$(id).value=d[id]});
+ }catch(e){}
+
+ let restoredCount=0;
+ for(let i=0;i<3;i++){
+  if(imgs[i])continue;
+  const blob=await loadPhotoFromDB(i);
+  if(blob){
+   try{
+    await applyPhotoBlob(i,blob);
+    restoredCount++;
+   }catch(e){}
+  }
+ }
+ if(restoredCount>0){
+  status('前回登録した写真（'+restoredCount+'枚）を復元しました。消す場合は「写真をすべて消去」を押してください。');
+  if(!imgs.some(x=>!x))makeReport(true);
+ }
+}
+
+restoreAll();
+window.addEventListener('pageshow',e=>{if(e.persisted)restoreAll();});
 })();
 </script>
 </body>
