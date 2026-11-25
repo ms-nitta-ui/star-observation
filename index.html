@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#101b35">
 <title>星空観察レポートメーカー</title>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js" defer></script>
 <style>
 :root{--navy:#101b35;--blue:#3456a1;--pale:#eef2fb;--line:#d8deea;--ink:#1d2738;--muted:#657087}
 *{box-sizing:border-box}body{margin:0;background:#f4f6fa;color:var(--ink);font-family:system-ui,-apple-system,"Noto Sans JP",sans-serif}
@@ -17,9 +19,9 @@ input[type=text],input[type=date],input[type=datetime-local],textarea,select{wid
 textarea{min-height:78px;resize:vertical}.photos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.photo{min-width:0;background:#f3f5f9;border-radius:10px;padding:8px}.photo b{font-size:12px;display:block;margin-bottom:6px}.photo img{width:100%;aspect-ratio:4/3;object-fit:cover;background:#101b35;border-radius:6px;display:block}.photo input{width:100%;font-size:10px;margin-top:7px}.photo input[type=datetime-local]{font-size:10px;padding:6px}
 button,.button{border:0;border-radius:10px;padding:12px 14px;font-size:14px;font-weight:700;cursor:pointer;text-align:center;display:inline-block}
 .primary{background:var(--blue);color:white}.secondary{background:#edf0f6;color:#26334c;border:1px solid #d8deea}.wide{width:100%}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.actions>*{flex:1}
+button:disabled{opacity:.6;cursor:not-allowed}
 .status{padding:10px;background:#f0f3f9;border-radius:9px;font-size:12px;line-height:1.6;margin-top:10px}
-canvas{width:100%;height:auto;background:#081020;border-radius:9px;display:block}.range{margin:12px 0}.range label{display:flex;justify-content:space-between}.range input{width:100%}
-.report{background:white;border:1px solid #cbd3e1;padding:12px;color:#172033;border-radius:5px}.report h3{text-align:center;font-size:18px;margin:0 0 3px}.report .sub{text-align:center;color:#596273;font-size:9px;margin-bottom:6px}.report h4{font-size:11px;border-bottom:1px solid #aab3c3;padding-bottom:3px;margin:7px 0 4px}.report p{font-size:9px;line-height:1.35;white-space:pre-wrap;overflow-wrap:anywhere;margin:3px 0;min-height:10px}.report .small{font-size:8px;color:#596273}.report .reportphotos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.report img{width:100%;height:auto;display:block}.report .reportphotos>div{min-width:0;text-align:center}.reportphotos img{width:100%;height:112px;object-fit:contain;background:#081020;border-radius:3px}.report .composite{width:100%;height:auto;max-height:225px;object-fit:contain;background:#081020;display:block}.report .resulttext{font-size:9px;line-height:1.35;white-space:pre-wrap;overflow-wrap:anywhere;min-height:0;padding:2px 0}
+.report{background:white;border:1px solid #cbd3e1;padding:14px;color:#172033;border-radius:5px}.report h3{text-align:center;font-size:18px;margin:0 0 3px}.report .sub{text-align:center;color:#596273;font-size:9px;margin-bottom:8px}.report h4{font-size:11px;border-bottom:1px solid #aab3c3;padding-bottom:3px;margin:10px 0 5px}.report p{font-size:10px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere;margin:3px 0;min-height:12px}.report .small{font-size:8px;color:#596273}.report .reportphotos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:6px 0}.report img{width:100%;height:auto;display:block}.report .reportphotos>div{min-width:0;text-align:center}.reportphotos img{width:100%;height:135px;object-fit:contain;background:#081020;border-radius:3px}.report .resulttext{font-size:10px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere;min-height:24px;padding:2px 0}
 footer{text-align:center;color:#758096;font-size:11px;padding:5px}
 @media(max-width:420px){.card{padding:13px}.photos{gap:5px}.photo{padding:5px}.photo input[type=datetime-local]{font-size:9px}.grid{gap:7px}}
 @media print{
@@ -28,12 +30,11 @@ footer{text-align:center;color:#758096;font-size:11px;padding:5px}
  body *{visibility:hidden!important}
  #printArea,#printArea *{visibility:visible!important}
  #printArea{position:absolute!important;left:0!important;top:0!important;width:100%!important;height:281mm!important;max-height:281mm!important;overflow:hidden!important;border:0!important;padding:0!important;box-shadow:none!important;border-radius:0!important}
- .report h3{font-size:15pt}.report h4{font-size:9pt}.report p{font-size:8pt;line-height:1.25}
- .report .reportphotos img{height:90px;max-height:90px;object-fit:contain}
- .report .composite{max-height:190px}
- .report .resulttext{font-size:8pt;line-height:1.2;min-height:0}
+ .report h3{font-size:15pt}.report h4{font-size:9pt}.report p{font-size:8.5pt;line-height:1.3}
+ .report .reportphotos img{height:115px;max-height:115px;object-fit:contain}
+ .report .resulttext{font-size:8.5pt;line-height:1.3;min-height:0}
  .report .small{font-size:7pt}
- .report h4{margin:5px 0 3px}
+ .report h4{margin:7px 0 4px}
  .report p{margin:2px 0}
 }
 </style>
@@ -70,75 +71,47 @@ footer{text-align:center;color:#758096;font-size:11px;padding:5px}
 <div class="photo"><b>② ２枚目</b><img id="thumb1" alt="２枚目のプレビュー"><input id="file1" type="file" accept="image/*"><label for="time1" style="margin-top:8px">撮影時刻</label><input id="time1" type="datetime-local"></div>
 <div class="photo"><b>③ ３枚目</b><img id="thumb2" alt="３枚目のプレビュー"><input id="file2" type="file" accept="image/*"><label for="time2" style="margin-top:8px">撮影時刻</label><input id="time2" type="datetime-local"></div>
 </div>
-<div class="actions"><button class="primary" id="align">写真を自動位置合わせ</button><button class="secondary" id="reset">写真を消去</button></div>
-<div class="status" id="alignStatus" role="status">写真を３枚登録してください。自動位置合わせでは、星ではなく地上の景色を基準にします。</div>
-<p class="note">写真に建物・木・山の稜線など、動かない地上の景色が写っていると位置合わせしやすくなります。星だけが写った写真では、地上を基準にした補正ができません。</p>
+<div class="actions"><button class="secondary" id="reset">写真をすべて消去</button></div>
+<div class="status" id="photoStatus" role="status">写真を３枚登録してください。建物・木・山の稜線など、地上の景色が少し写っていると星の位置の変化が分かりやすくなります。</div>
 </section>
 
 <section class="card">
-<h2><span class="num">3</span>写真を重ねて比較</h2>
-<canvas id="compare" width="1000" height="650" aria-label="写真の重ね合わせ"></canvas>
-<div class="range"><label for="opacity1">２枚目の透明度 <span id="op1">50%</span></label><input id="opacity1" type="range" min="0" max="100" value="50"></div>
-<div class="range"><label for="opacity2">３枚目の透明度 <span id="op2">50%</span></label><input id="opacity2" type="range" min="0" max="100" value="50"></div>
-<div class="actions"><button class="secondary" id="onlyFirst">１枚目のみ</button><button class="secondary" id="allPhotos">３枚を重ねる</button></div>
-<p class="note">星の位置がずれて見えるか確認しましょう。位置合わせ後も、地上の景色が一致しているか写真を見て確かめてください。</p>
-</section>
-
-<section class="card">
-<h2><span class="num">4</span>観察結果・考察</h2>
+<h2><span class="num">3</span>観察結果・考察</h2>
 <div class="field"><label for="features">星の動き方の特徴</label><textarea id="features" placeholder="星の移動する向きや、星どうしの位置関係などを書こう。"></textarea></div>
 <div class="field"><label for="reflection">気付いたこと・考察・振り返り</label><textarea id="reflection" placeholder="観察して気付いたことや、考えたこと、今回の観察を振り返って分かったことを書こう。"></textarea></div>
 </section>
 
 <section class="card">
-<h2><span class="num">5</span>レポートを作成・PDF保存</h2>
-<button class="primary wide" id="makeReport">レポートをプレビュー</button>
+<h2><span class="num">4</span>レポート作成・PDF保存・提出</h2>
+<button class="primary wide" id="pdfAndSubmit">PDFを保存して先生に提出する</button>
+<div class="actions">
+  <button class="secondary" id="pdfOnly">PDFだけ保存する</button>
+  <button class="secondary" id="makeReport">プレビュー更新</button>
+  <button class="secondary" id="saveDraft">一時保存</button>
+</div>
+<div class="status" id="pdfStatus" role="status">上のボタンを押すと、端末にPDFが保存されると同時に、学校のGoogleドライブへ自動で提出されます。提出ボタンを押すまで写真や入力内容は送信されません。</div>
 <div style="height:12px"></div>
 <div id="printArea" class="report">
 <h3>星の動きを観察しよう</h3><div class="sub">天体の観察レポート</div>
 <p id="rstudent"></p>
 <h4>１．観察場所と方位</h4><p id="rplace"></p><p id="rdirection"></p>
 <h4>２．撮影した写真</h4><div class="reportphotos" id="rphotos"></div>
-<h4>３．写真を重ね合わせた結果</h4><img id="rcomposite" class="composite" alt="合成写真">
-<h4>４．星の動き方の特徴</h4><p id="rfeatures" class="resulttext"></p>
-<h4>５．気付いたこと・考察・振り返り</h4><p id="rreflection"></p>
+<h4>３．星の動き方の特徴</h4><p id="rfeatures" class="resulttext"></p>
+<h4>４．気付いたこと・考察・振り返り</h4><p id="rreflection" class="resulttext"></p>
 <p class="small" style="text-align:right;margin-top:12px">星空観察レポートメーカー</p>
 </div>
-<div class="actions"><button class="primary" id="pdf">圧縮PDFを作成・保存</button><button class="secondary" id="saveDraft">入力内容を一時保存</button></div>
-<div class="status" id="pdfStatus">入力内容全体を縮小調整し、A4・1ページのPDFとして保存します。文章が長い場合は、全体が小さくなることがあります。</div>
 </section>
-
-<section class="card">
-<h2><span class="num">6</span>先生にPDFを提出</h2>
-<p class="note">①「PDFとして保存・印刷」からPDFをスマホに保存します。②保存したPDFを選び、③「先生に提出」を押してください。学校のGoogleアカウントでログインして提出してください。</p>
-<div class="field">
-<label for="pdfFile">保存したPDFを選択</label>
-<input id="pdfFile" type="file" accept="application/pdf,.pdf">
-</div>
-<button class="primary wide" id="uploadPdf">先生に提出する</button>
-<div class="status" id="uploadStatus" role="status">PDFは学校のGoogleドライブに保存されます。写真や入力内容は、提出ボタンを押すまで送信されません。</div>
-</section>
-<footer>星空観察レポートメーカー ｜ PDF提出時に、選択したファイルと入力した提出者情報を学校のGoogleドライブへ送信します。</footer>
+<footer>星空観察レポートメーカー ｜ 提出時に、作成したPDFと入力した提出者情報を学校のGoogleドライブへ送信します。</footer>
 </main>
 <script>
 // 先生へ：デプロイしたGoogle Apps Scriptウェブアプリの /exec URLを設定してください。
 const GAS_WEB_APP_URL = "https://script.google.com/a/macros/kanazawa-city.ed.jp/s/AKfycbw__A7psF2oqUsNm6X9bSVpPttWU_MpzY6ubjyKObfEhskf54sdPFf37aOGShPVRbn-/exec";
 (()=>{
-const $=id=>document.getElementById(id);let imgs=[null,null,null],urls=[null,null,null],transforms=[null,null,null],displayMode='all';
-const canvas=$('compare'),ctx=canvas.getContext('2d');
-function status(s){$('alignStatus').textContent=s}
-function fit(im,w,h){let k=Math.min(w/im.width,h/im.height);return{x:(w-im.width*k)/2,y:(h-im.height*k)/2,w:im.width*k,h:im.height*k}}
-function draw(){
- ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.fillStyle='#081020';ctx.fillRect(0,0,1000,650);
- if(!imgs[0]){ctx.fillStyle='#c5ccda';ctx.font='24px sans-serif';ctx.textAlign='center';ctx.fillText('写真を登録するとここに表示されます',500,325);return}
- imgs.forEach((im,i)=>{if(!im||(displayMode==='first'&&i>0))return;ctx.globalAlpha=i===0?1:Number($('opacity'+i).value)/100;let t=transforms[i];
- if(t&&i>0){ctx.setTransform(t[0]*2.5,t[3]*2.5,t[1]*2.5,t[4]*2.5,t[2]*2.5,t[5]*2.5);ctx.drawImage(im,0,0,400,260);ctx.setTransform(1,0,0,1,0,0)}
- else{let r=fit(im,1000,650);ctx.drawImage(im,r.x,r.y,r.w,r.h)}
- });ctx.globalAlpha=1;
-}
+const $=id=>document.getElementById(id);let imgs=[null,null,null],urls=[null,null,null];
+function status(s){$('photoStatus').textContent=s}
+
 // 写真は登録時に自動圧縮し、圧縮後の画像を以後の処理に使う。
 async function compressPhoto(file){
- // 星空の細部をできるだけ残しつつ、写真1枚を約900KB以下にする。
  const MAX_EDGE=1400, TARGET_BYTES=900*1024;
  let source=null, sourceCanvas=null;
  try{
@@ -171,66 +144,65 @@ async function compressPhoto(file){
   if(sourceCanvas){sourceCanvas.width=1;sourceCanvas.height=1;}
  }
 }
+
 [0,1,2].forEach(i=>$('file'+i).addEventListener('change',async e=>{
  const f=e.target.files[0];if(!f)return;
  if(!f.type.startsWith('image/')){status('画像ファイルを選んでください。');return;}
- status((i+1)+'枚目の写真を圧縮しています。しばらくお待ちください。');
+ status((i+1)+'枚目の写真を読み込んでいます…');
  try{
   const blob=await compressPhoto(f), u=URL.createObjectURL(blob), im=new Image();
   await new Promise((resolve,reject)=>{im.onload=resolve;im.onerror=()=>reject(new Error('表示できませんでした。'));im.src=u;});
   if(urls[i])URL.revokeObjectURL(urls[i]);
-  imgs[i]=im;urls[i]=u;transforms[i]=null;$('thumb'+i).src=u;draw();
-  status((i+1)+'枚目を自動圧縮しました（'+(f.size/1024/1024).toFixed(1)+'MB → '+(blob.size/1024/1024).toFixed(1)+'MB）。');
- }catch(err){status('写真を圧縮できませんでした。JPEG形式などの写真を選び直してください。');e.target.value='';}
+  imgs[i]=im;urls[i]=u;$('thumb'+i).src=u;
+  status((i+1)+'枚目を登録しました（'+(f.size/1024/1024).toFixed(1)+'MB → '+(blob.size/1024/1024).toFixed(1)+'MB）。');
+  if(!imgs.some(x=>!x))makeReport(true);
+ }catch(err){status('写真を読み込めませんでした。JPEG形式などの写真を選び直してください。');e.target.value='';}
 }));
-['opacity1','opacity2'].forEach(id=>$(id).addEventListener('input',()=>{$(id==='opacity1'?'op1':'op2').textContent=$(id).value+'%';draw()}));
-$('onlyFirst').onclick=()=>{displayMode='first';draw()};$('allPhotos').onclick=()=>{displayMode='all';draw()};
-$('reset').onclick=()=>{imgs=[null,null,null];transforms=[null,null,null];urls.forEach(u=>u&&URL.revokeObjectURL(u));urls=[null,null,null];[0,1,2].forEach(i=>{$('file'+i).value='';$('thumb'+i).removeAttribute('src')});draw();status('写真を消去しました。')};
-async function loadOpenCV(){
- if(window.cv&&window.cv.Mat)return window.cv;
- await new Promise((resolve,reject)=>{let s=document.querySelector('script[data-cv]');if(!s){s=document.createElement('script');s.dataset.cv='1';s.src='https://docs.opencv.org/4.x/opencv.js';document.head.appendChild(s)}
- let n=0;const t=setInterval(()=>{if(window.cv&&window.cv.Mat){clearInterval(t);resolve()}else if(++n>150){clearInterval(t);reject(new Error('timeout'))}},200)});
- return window.cv;
-}
-$('align').onclick=async()=>{
- if(imgs.some(x=>!x)){status('先に写真を３枚登録してください。');return}
- $('align').disabled=true;$('align').textContent='位置合わせ中…';
- let mats=[];
- try{
- const cv=await loadOpenCV();
- mats=imgs.map(im=>{let c=document.createElement('canvas');c.width=400;c.height=260;c.getContext('2d').drawImage(im,0,0,400,260);let m=cv.imread(c),g=new cv.Mat();cv.cvtColor(m,g,cv.COLOR_RGBA2GRAY);m.delete();return g});
- const criteria=new cv.TermCriteria(cv.TERM_CRITERIA_EPS|cv.TERM_CRITERIA_COUNT,150,0.0001);
- transforms[0]=null;
- for(let i=1;i<3;i++){let warp=cv.Mat.eye(2,3,cv.CV_32F);try{cv.findTransformECC(mats[0],mats[i],warp,cv.MOTION_AFFINE,criteria);let d=warp.data32F;transforms[i]=[d[0],d[1],d[2],d[3],d[4],d[5]]}finally{warp.delete()}}
- draw();status('位置合わせを実行しました。地上の景色が重なっているか必ず確認してください。');
- }catch(e){status('自動位置合わせに失敗しました。地上の景色が写っているか、写真の明るさや構図を確認して再度お試しください。')}
- finally{mats.forEach(m=>m.delete());$('align').disabled=false;$('align').textContent='写真を自動位置合わせ'}
+
+$('reset').onclick=()=>{
+ imgs=[null,null,null];
+ urls.forEach(u=>u&&URL.revokeObjectURL(u));
+ urls=[null,null,null];
+ [0,1,2].forEach(i=>{$('file'+i).value='';$('thumb'+i).removeAttribute('src')});
+ status('写真を消去しました。');
 };
-function compositeData(){
- const c=document.createElement('canvas');c.width=1000;c.height=650;const x=c.getContext('2d');x.fillStyle='#081020';x.fillRect(0,0,1000,650);
- imgs.forEach((im,i)=>{if(!im)return;x.globalAlpha=i===0?1:Number($('opacity'+i).value)/100;let t=transforms[i];if(t&&i>0){x.setTransform(t[0]*2.5,t[3]*2.5,t[1]*2.5,t[4]*2.5,t[2]*2.5,t[5]*2.5);x.drawImage(im,0,0,400,260);x.setTransform(1,0,0,1,0,0)}else{let r=fit(im,1000,650);x.drawImage(im,r.x,r.y,r.w,r.h)}});x.globalAlpha=1;return c.toDataURL('image/jpeg',.68)
-}
-function makeReport(){
- if(imgs.some(x=>!x)){status('レポート作成前に写真を３枚登録してください。');return false}
+
+function makeReport(silent=false){
+ if(imgs.some(x=>!x)){
+  if(!silent)$('pdfStatus').textContent='先に写真を３枚すべて登録してください。';
+  return false;
+ }
  const v=id=>$(id).value.trim()||'（未入力）';
- $('rstudent').textContent=v('grade')+v('className')+v('number')+'　'+v('student');
- $('rplace').textContent='観察場所：'+v('place');
+ $('rstudent').textContent=v('grade')+v('className')+v('number')+' '+v('student');
+ $('rplace').textContent='観察場所：'+v('place')+'（観察日：'+v('date')+'）';
  $('rdirection').textContent='観察した方位：'+v('direction');
  $('rphotos').replaceChildren();
- imgs.forEach((im,i)=>{let wrap=document.createElement('div'),pic=document.createElement('img'),cap=document.createElement('div');pic.src=urls[i];pic.alt='撮影写真'+(i+1);cap.className='small';cap.style.textAlign='center';cap.textContent='写真'+(i+1)+'　'+($('time'+i).value?$('time'+i).value.replace('T',' '):'日時未入力');wrap.append(pic,cap);$('rphotos').append(wrap)});
- $('rcomposite').src=compositeData();
- $('rreflection').textContent=v('reflection');$('rfeatures').textContent=v('features');return true
+ imgs.forEach((im,i)=>{
+  let wrap=document.createElement('div'),pic=document.createElement('img'),cap=document.createElement('div');
+  pic.src=urls[i];pic.alt='撮影写真'+(i+1);
+  cap.className='small';cap.style.textAlign='center';
+  cap.textContent='写真'+(i+1)+' '+($('time'+i).value?$('time'+i).value.replace('T',' '):'日時未入力');
+  wrap.append(pic,cap);$('rphotos').append(wrap);
+ });
+ $('rfeatures').textContent=v('features');
+ $('rreflection').textContent=v('reflection');
+ return true;
 }
-$('makeReport').onclick=()=>{if(makeReport())$('printArea').scrollIntoView({behavior:'smooth',block:'start'})};
 
-// PDFライブラリを複数の配信元から順番に読み込む。
+$('makeReport').onclick=()=>{
+ if(makeReport()){
+  $('pdfStatus').textContent='プレビューを更新しました。';
+  $('printArea').scrollIntoView({behavior:'smooth',block:'nearest'});
+ }
+};
+
 function loadScriptFrom(url){
  return new Promise((resolve,reject)=>{
   const script=document.createElement('script');
   script.src=url;script.async=true;
-  const timer=setTimeout(()=>{script.remove();reject(new Error('読み込みがタイムアウトしました: '+url))},15000);
+  const timer=setTimeout(()=>{script.remove();reject(new Error('タイムアウト'))},12000);
   script.onload=()=>{clearTimeout(timer);resolve()};
-  script.onerror=()=>{clearTimeout(timer);script.remove();reject(new Error('読み込めませんでした: '+url))};
+  script.onerror=()=>{clearTimeout(timer);script.remove();reject(new Error('読み込み失敗'))};
   document.head.appendChild(script);
  });
 }
@@ -241,9 +213,9 @@ async function ensurePdfLibraries(){
    'https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js',
    'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'
   ];
-  let loaded=false,lastError;
-  for(const url of urls){try{await loadScriptFrom(url);if(window.html2canvas){loaded=true;break}}catch(e){lastError=e}}
-  if(!loaded)throw new Error('画面を画像に変換する部品を読み込めません。学校のネットワークで外部サイトへの接続が制限されていないか確認してください。'+(lastError?' ('+lastError.message+')':''));
+  let loaded=false;
+  for(const url of urls){try{await loadScriptFrom(url);if(window.html2canvas){loaded=true;break}}catch(e){}}
+  if(!loaded)throw new Error('画面変換部品を読み込めませんでした。通信環境を確認してください。');
  }
  if(!window.jspdf||!window.jspdf.jsPDF){
   const urls=[
@@ -251,15 +223,22 @@ async function ensurePdfLibraries(){
    'https://unpkg.com/jspdf@2.5.2/dist/jspdf.umd.min.js',
    'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js'
   ];
-  let loaded=false,lastError;
-  for(const url of urls){try{await loadScriptFrom(url);if(window.jspdf&&window.jspdf.jsPDF){loaded=true;break}}catch(e){lastError=e}}
-  if(!loaded)throw new Error('PDFを出力する部品を読み込めません。学校のネットワークで外部サイトへの接続が制限されていないか確認してください。'+(lastError?' ('+lastError.message+')':''));
+  let loaded=false;
+  for(const url of urls){try{await loadScriptFrom(url);if(window.jspdf&&window.jspdf.jsPDF){loaded=true;break}}catch(e){}}
+  if(!loaded)throw new Error('PDF出力部品を読み込めませんでした。通信環境を確認してください。');
  }
 }
-$('pdf').onclick=async()=>{
- if(!makeReport())return;
- const btn=$('pdf'),info=$('pdfStatus'),target=$('printArea');
- btn.disabled=true;btn.textContent='PDFを圧縮して作成中…';
+
+function buildPdfFilename(){
+ const parts=[$('grade').value,$('className').value,$('number').value,$('student').value]
+  .map(s=>s.trim().replace(/[\\/:*?"<>|]/g,''))
+  .filter(Boolean);
+ return parts.length?'星空観察レポート_'+parts.join('_')+'.pdf':'星空観察レポート.pdf';
+}
+
+// PDFを生成して端末へ保存し、jsPDFインスタンスとファイル名を返す
+async function createAndSavePdf(){
+ const target=$('printArea');
  const original={width:target.style.width,height:target.style.height,minHeight:target.style.minHeight,
   maxHeight:target.style.maxHeight,overflow:target.style.overflow,padding:target.style.padding,
   border:target.style.border,borderRadius:target.style.borderRadius};
@@ -267,92 +246,104 @@ $('pdf').onclick=async()=>{
   await ensurePdfLibraries();
   await Promise.all(Array.from(target.querySelectorAll('img')).map(im=>im.decode?im.decode().catch(()=>{}):Promise.resolve()));
   if(document.fonts&&document.fonts.ready)await document.fonts.ready;
-  // 内容全体を自然な高さで描画し、縦横比を保ったままA4・1ページに収める。
   target.style.width='794px';target.style.height='auto';target.style.minHeight='0';
-  target.style.maxHeight='none';target.style.overflow='visible';target.style.padding='20px';
+  target.style.maxHeight='none';target.style.overflow='visible';target.style.padding='22px';
   target.style.border='0';target.style.borderRadius='0';
   const contentHeight=Math.ceil(target.scrollHeight);
   const shot=await window.html2canvas(target,{scale:2,backgroundColor:'#ffffff',useCORS:true,
    logging:false,width:794,height:contentHeight,windowWidth:794,windowHeight:Math.max(contentHeight,1123)});
-  const jpg=shot.toDataURL('image/jpeg',0.68);
+  const jpg=shot.toDataURL('image/jpeg',0.72);
   const PDF=window.jspdf.jsPDF;
   const pdf=new PDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
-  const pageW=210,pageH=297,margin=5;
+  const pageW=210,pageH=297,margin=6;
   const fitScale=Math.min((pageW-margin*2)/shot.width,(pageH-margin*2)/shot.height);
   const imageW=shot.width*fitScale,imageH=shot.height*fitScale;
   pdf.addImage(jpg,'JPEG',(pageW-imageW)/2,(pageH-imageH)/2,imageW,imageH,undefined,'FAST');
-  pdf.save('星空観察レポート.pdf');
-  info.textContent='圧縮PDFを作成しました。写真と入力内容を含むA4・1ページのPDFを保存してください。';
- }catch(err){
-  info.textContent='PDFを作成できませんでした。'+(err&&err.message?err.message:'')+' ページを再読み込みして、もう一度お試しください。';
+  const filename=buildPdfFilename();
+  pdf.save(filename);
+  return {pdf,filename};
  }finally{
   Object.assign(target.style,original);
-  btn.disabled=false;btn.textContent='圧縮PDFを作成・保存';
  }
-};
-$('saveDraft').onclick=()=>{
- const data={};['place','date','direction','grade','className','number','student','time0','time1','time2','features','reflection'].forEach(id=>data[id]=$(id).value);
- try{localStorage.setItem('starReportFields',JSON.stringify(data));status('入力内容をこのブラウザに一時保存しました（写真は保存されません）。')}catch(e){status('保存できませんでした。')}
-};
-$('uploadPdf').onclick=async()=>{
- const file=$('pdfFile').files[0];
- const statusBox=$('uploadStatus');
+}
+
+// 生成したPDFをそのままGoogle Apps Scriptへ送信する
+function submitPdfToDrive(pdf,filename){
  if(!GAS_WEB_APP_URL.startsWith('https://script.google.com/')){
-   statusBox.textContent='先生側でGoogle Apps ScriptのウェブアプリURLを設定する必要があります。';
-   return;
+  throw new Error('先生側でGoogle Apps ScriptのウェブアプリURLを設定する必要があります。');
  }
- if(!file){statusBox.textContent='先にスマホに保存したPDFを選択してください。';return;}
- if(file.type!=='application/pdf' && !file.name.toLowerCase().endsWith('.pdf')){
-   statusBox.textContent='PDFファイルを選択してください。';return;
- }
- if(file.size>20*1024*1024){
-   statusBox.textContent='ファイルサイズが大きすぎます。20MB以下のPDFを選択してください。';return;
- }
+ const dataUri=pdf.output('datauristring');
+ const base64=String(dataUri).split(',')[1];
  const student=($('student').value||'名前未入力').trim();
  const className=(($('grade').value||'学年未入力')+($('className').value||'組未入力')+($('number').value||'番号未入力')).trim();
  const date=($('date').value||'日付未入力').trim();
- $('uploadPdf').disabled=true;
- $('uploadPdf').textContent='送信準備中…';
- statusBox.textContent='PDFを読み込んでいます。画面を閉じずにお待ちください。';
+
+ const form=document.createElement('form');
+ form.method='POST';form.action=GAS_WEB_APP_URL;form.target='starUploadFrame';
+ form.style.display='none';
+ const fields={
+  filename:filename,
+  mimeType:'application/pdf',
+  base64:base64,
+  student:student,
+  className:className,
+  observationDate:date
+ };
+ Object.entries(fields).forEach(([name,value])=>{
+  const input=document.createElement('input');input.type='hidden';input.name=name;input.value=value;form.appendChild(input);
+ });
+ let frame=document.getElementById('starUploadFrame');
+ if(!frame){frame=document.createElement('iframe');frame.name='starUploadFrame';frame.id='starUploadFrame';frame.style.display='none';document.body.appendChild(frame);}
+ document.body.appendChild(form);
+ form.submit();
+ setTimeout(()=>form.remove(),4000);
+}
+
+$('pdfAndSubmit').onclick=async()=>{
+ if(!makeReport())return;
+ const mainBtn=$('pdfAndSubmit'),subBtn=$('pdfOnly'),info=$('pdfStatus');
+ mainBtn.disabled=true;subBtn.disabled=true;
+ mainBtn.textContent='PDF作成・提出中…';
+ info.textContent='PDFを作成して端末に保存し、学校のGoogleドライブへ送信しています。完了まで画面を閉じないでください…';
  try{
-   const dataUrl=await new Promise((resolve,reject)=>{
-     const reader=new FileReader();
-     reader.onload=()=>resolve(reader.result);
-     reader.onerror=()=>reject(new Error('PDFを読み込めませんでした。'));
-     reader.readAsDataURL(file);
-   });
-   const base64=String(dataUrl).split(',')[1];
-   const form=document.createElement('form');
-   form.method='POST';form.action=GAS_WEB_APP_URL;form.target='starUploadFrame';
-   form.style.display='none';
-   const fields={
-     filename:file.name,
-     mimeType:'application/pdf',
-     base64:base64,
-     student:student,
-     className:className,
-     observationDate:date
-   };
-   Object.entries(fields).forEach(([name,value])=>{
-     const input=document.createElement('input');input.type='hidden';input.name=name;input.value=value;form.appendChild(input);
-   });
-   let frame=document.getElementById('starUploadFrame');
-   if(!frame){frame=document.createElement('iframe');frame.name='starUploadFrame';frame.id='starUploadFrame';frame.style.display='none';document.body.appendChild(frame);}
-   document.body.appendChild(form);
-   statusBox.textContent='送信しています。完了まで画面を閉じないでください。';
-   form.submit();
-   setTimeout(()=>{
-     statusBox.textContent='送信リクエストを送信しました。学校のGoogleドライブにPDFが保存されているか、先生側で確認してください。通信状況などにより保存に失敗する場合もあります。';
-     $('uploadPdf').disabled=false;$('uploadPdf').textContent='先生に提出する';
-     form.remove();
-   },3500);
+  const {pdf,filename}=await createAndSavePdf();
+  info.textContent='「'+filename+'」を端末に保存しました。続けて先生へ提出しています…';
+  submitPdfToDrive(pdf,filename);
+  setTimeout(()=>{
+   info.textContent='「'+filename+'」の端末への保存と、先生への提出リクエストが完了しました！';
+   mainBtn.disabled=false;subBtn.disabled=false;
+   mainBtn.textContent='PDFを保存して先生に提出する';
+  },3500);
  }catch(err){
-   statusBox.textContent='送信できませんでした：'+err.message;
-   $('uploadPdf').disabled=false;$('uploadPdf').textContent='先生に提出する';
+  info.textContent='エラーが発生しました：'+(err&&err.message?err.message:'処理に失敗しました。')+' 通信環境を確認してもう一度お試しください。';
+  mainBtn.disabled=false;subBtn.disabled=false;
+  mainBtn.textContent='PDFを保存して先生に提出する';
  }
 };
+
+$('pdfOnly').onclick=async()=>{
+ if(!makeReport())return;
+ const mainBtn=$('pdfAndSubmit'),subBtn=$('pdfOnly'),info=$('pdfStatus');
+ mainBtn.disabled=true;subBtn.disabled=true;
+ subBtn.textContent='PDF作成中…';
+ info.textContent='PDFを作成しています…';
+ try{
+  const {filename}=await createAndSavePdf();
+  info.textContent='「'+filename+'」を端末に保存しました（Googleドライブへの提出は行われていません）。';
+ }catch(err){
+  info.textContent='PDFを作成できませんでした：'+(err&&err.message?err.message:'');
+ }finally{
+  mainBtn.disabled=false;subBtn.disabled=false;
+  subBtn.textContent='PDFだけ保存する';
+ }
+};
+
+$('saveDraft').onclick=()=>{
+ const data={};['place','date','direction','grade','className','number','student','time0','time1','time2','features','reflection'].forEach(id=>data[id]=$(id).value);
+ try{localStorage.setItem('starReportFields',JSON.stringify(data));$('pdfStatus').textContent='入力内容をこのブラウザに一時保存しました（写真は保存されません）。'}catch(e){$('pdfStatus').textContent='一時保存できませんでした。'}
+};
+
 try{const d=JSON.parse(localStorage.getItem('starReportFields')||'{}');Object.keys(d).forEach(id=>{if($(id))$(id).value=d[id]})}catch(e){}
-draw();
 })();
 </script>
 </body>
