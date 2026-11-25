@@ -106,7 +106,7 @@ footer{text-align:center;color:#758096;font-size:11px;padding:5px}
 
 <section class="card">
 <h2><span class="num">5</span>先生にPDFを提出</h2>
-<p class="note">①「PDFを作成・保存」からPDFをスマホに保存します。②保存したPDFを選び、③「先生に提出する」を押してください。</p>
+<p class="note">①「PDFを作成・保存」からPDFをスマホに保存します。②保存したPDFを選び、③「先生に提出する」を押してください。<br>※新しいタブが開きます。ログイン画面が出た場合は、学校のアカウントでログインすると提出が完了します。</p>
 <div class="field">
 <label for="pdfFile">保存したPDFを選択</label>
 <input id="pdfFile" type="file" accept="application/pdf,.pdf">
@@ -395,8 +395,8 @@ $('uploadPdf').onclick=async()=>{
  const className=(($('grade').value||'学年未入力')+($('className').value||'組未入力')+($('number').value||'番号未入力')).trim();
  const date=($('date').value||'日付未入力').trim();
  $('uploadPdf').disabled=true;
- $('uploadPdf').textContent='送信準備中…';
- statusBox.textContent='PDFを読み込んでいます。画面を閉じずにお待ちください。';
+ $('uploadPdf').textContent='提出画面を開いています…';
+ statusBox.textContent='PDFを読み込んでいます。そのままお待ちください…';
  try{
    const dataUrl=await new Promise((resolve,reject)=>{
      const reader=new FileReader();
@@ -406,7 +406,9 @@ $('uploadPdf').onclick=async()=>{
    });
    const base64=String(dataUrl).split(',')[1];
    const form=document.createElement('form');
-   form.method='POST';form.action=GAS_WEB_APP_URL;form.target='starUploadFrame';
+   form.method='POST';
+   form.action=GAS_WEB_APP_URL;
+   form.target='_blank';
    form.style.display='none';
    const fields={
      filename:file.name,
@@ -417,21 +419,24 @@ $('uploadPdf').onclick=async()=>{
      observationDate:date
    };
    Object.entries(fields).forEach(([name,value])=>{
-     const input=document.createElement('input');input.type='hidden';input.name=name;input.value=value;form.appendChild(input);
+     const input=document.createElement('input');
+     input.type='hidden';
+     input.name=name;
+     input.value=value;
+     form.appendChild(input);
    });
-   let frame=document.getElementById('starUploadFrame');
-   if(!frame){frame=document.createElement('iframe');frame.name='starUploadFrame';frame.id='starUploadFrame';frame.style.display='none';document.body.appendChild(frame);}
    document.body.appendChild(form);
-   statusBox.textContent='送信しています。完了まで画面を閉じないでください。';
    form.submit();
    setTimeout(()=>{
-     statusBox.textContent='送信リクエストを送信しました。学校のGoogleドライブにPDFが保存されているか、先生側で確認してください。通信状況などにより保存に失敗する場合もあります。';
-     $('uploadPdf').disabled=false;$('uploadPdf').textContent='先生に提出する';
+     statusBox.textContent='別のタブで提出画面を開きました。開いた画面でログイン（必要な場合）と提出完了の表示を確認してください。';
+     $('uploadPdf').disabled=false;
+     $('uploadPdf').textContent='先生に提出する';
      form.remove();
-   },3500);
+   },1000);
  }catch(err){
-   statusBox.textContent='送信できませんでした：'+err.message;
-   $('uploadPdf').disabled=false;$('uploadPdf').textContent='先生に提出する';
+   statusBox.textContent='送信準備ができませんでした：'+err.message;
+   $('uploadPdf').disabled=false;
+   $('uploadPdf').textContent='先生に提出する';
  }
 };
 
